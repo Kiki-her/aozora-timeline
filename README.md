@@ -1,16 +1,212 @@
-# book_feed
+# 青空文庫リーダー - Aozora Timeline
 
-A new Flutter project.
+X (Twitter) UIをベースにした青空文庫作品発見Webアプリ
 
-## Getting Started
+![App Preview](https://img.shields.io/badge/Platform-Web%20%7C%20iOS%20%7C%20Android-blue)
+![Flutter](https://img.shields.io/badge/Flutter-3.35.4-02569B?logo=flutter)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-This project is a starting point for a Flutter application.
+## 📱 アプリ概要
 
-A few resources to get you started if this is your first Flutter project:
+**「文字中毒者のための、SNS疲れしない読書発見アプリ」**
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+X (Twitter) UIを完全再現しながら、青空文庫の書籍情報をタイムライン形式で表示するFlutterアプリ。ユーザー同士の交流はなく、作品との出会いと読書記録に特化。
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 🎯 ターゲットユーザー
+- SNSが苦手だが、タイムライン形式の情報流入は好き
+- 青空文庫を読みたいが、作品が多すぎて選べない
+- 偶然の出会いから読書を始めたい文学愛好者
+
+---
+
+## ✨ 主な機能
+
+### 📚 **タイムライン機能**
+- 青空文庫の書籍をランダム表示
+- Pull to Refresh で新しい書籍を読み込み
+- 無限スクロール対応
+- タップでカード展開・全文表示 (X UI準拠)
+
+### ❤️ **インタラクション**
+- いいね機能 (ローカル保存)
+- 読了マーク機能
+- いいね一覧・読了一覧表示
+- 青空文庫サイトへ直接リンク
+
+### 🎨 **デザイン**
+- X (Twitter) 2025年版UI完全再現
+- ダークモード完全対応
+- レスポンシブデザイン (GOJO UI風)
+  - モバイル: フル幅表示
+  - デスクトップ: 中央配置 + 装飾背景
+
+### 📖 **収録作品** (サンプル)
+- 夏目漱石: 吾輩は猫である、坊っちゃん、こころ
+- 太宰治: 走れメロス、人間失格、斜陽
+- 芥川龍之介: 羅生門、蜘蛛の糸
+- 宮沢賢治: 銀河鉄道の夜、注文の多い料理店
+- その他、日本文学の名作15作品
+
+---
+
+## 🛠️ 技術スタック
+
+### フレームワーク
+- **Flutter**: 3.35.4
+- **Dart**: 3.9.2
+
+### 状態管理
+- **Provider**: 6.1.5+1
+
+### データ管理
+- **Hive**: 2.2.3 (ローカルDB - Web対応)
+- **hive_flutter**: 1.1.0
+- **shared_preferences**: 2.5.3 (設定保存)
+
+### ネットワーク
+- **http**: 1.5.0 (API通信)
+- **url_launcher**: ^6.3.0 (外部リンク)
+
+### Firebase (オプション)
+- **firebase_core**: 3.6.0
+- **cloud_firestore**: 5.4.3 (カウント同期用)
+
+---
+
+## 🎨 デザインシステム
+
+### カラーパレット
+X (Twitter) 完全準拠:
+- **Primary**: #1D9BF0 (X Blue)
+- **Like**: #F91880 (Pink)
+- **Read**: #00BA7C (Green)
+- **Light Mode**: White backgrounds
+- **Dark Mode**: True black backgrounds (#000000)
+
+### タイポグラフィ
+- **フォント**: Noto Sans JP
+- **サイズ**: 11px〜20px (X UI準拠)
+- **ウェイト**: 400 (Regular) / 600 (SemiBold) / 700 (Bold)
+
+### スペーシング
+8pt Grid System採用
+
+---
+
+## 📂 プロジェクト構成 (Clean Architecture)
+
+```
+lib/
+├── core/
+│   ├── theme/                    # グローバルテーマ
+│   │   ├── app_theme.dart
+│   │   ├── app_colors.dart
+│   │   ├── app_text_styles.dart
+│   │   └── app_dimensions.dart
+│   └── widgets/                  # 共通Widget
+│       ├── responsive_wrapper.dart
+│       └── x_divider.dart
+│
+├── data/
+│   ├── datasources/
+│   │   ├── local/                # Hive DB
+│   │   └── remote/               # API通信
+│   ├── models/                   # データモデル
+│   └── repositories/             # Repository実装
+│
+├── domain/
+│   ├── entities/                 # エンティティ
+│   ├── repositories/             # Repository Interface
+│   └── usecases/                 # ビジネスロジック
+│
+└── presentation/
+    ├── providers/                # Provider (状態管理)
+    ├── screens/                  # 画面
+    │   ├── timeline/
+    │   ├── likes/
+    │   ├── reads/
+    │   ├── settings/
+    │   └── book_detail/
+    └── navigation/               # ナビゲーション
+```
+
+---
+
+## 🚀 セットアップ
+
+### 前提条件
+- Flutter SDK 3.35.4以上
+- Dart SDK 3.9.2以上
+
+### インストール
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/YOUR_USERNAME/aozora-timeline.git
+cd aozora-timeline
+
+# 依存関係をインストール
+flutter pub get
+
+# Web版を実行
+flutter run -d chrome
+
+# または、リリースビルド
+flutter build web --release
+```
+
+---
+
+## 🌐 デプロイ
+
+### Web版 (推奨)
+```bash
+# ビルド
+flutter build web --release
+
+# 配信 (例: Cloudflare Pages)
+# build/web ディレクトリをアップロード
+```
+
+### Android版
+```bash
+# APKビルド
+flutter build apk --release
+
+# App Bundle (Google Play Store用)
+flutter build appbundle --release
+```
+
+### iOS版
+```bash
+# macOS + Xcode環境で実行
+flutter build ios --release
+```
+
+---
+
+## 📄 ライセンス
+
+MIT License
+
+---
+
+## 🙏 クレジット
+
+### データソース
+- **青空文庫**: https://www.aozora.gr.jp/
+- 日本文学の名作を無償で提供する素晴らしいプロジェクト
+
+### デザイン
+- **X (Twitter)**: UI/UXデザインの参考
+- **GOJO**: レスポンシブデザインの参考
+
+---
+
+## 📞 お問い合わせ
+
+Issue報告・機能リクエスト: [GitHub Issues](https://github.com/YOUR_USERNAME/aozora-timeline/issues)
+
+---
+
+**Made with ❤️ for 文学愛好者**
