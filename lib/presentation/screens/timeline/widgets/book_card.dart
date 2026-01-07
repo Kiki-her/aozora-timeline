@@ -5,6 +5,7 @@ import '../../../../domain/entities/book.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../providers/interaction_provider.dart';
+import '../../author/author_detail_screen.dart';
 
 /// 書籍カード (X のツイートカード風)
 class BookCard extends StatefulWidget {
@@ -73,10 +74,23 @@ class _BookCardState extends State<BookCard> {
                   // 著者名と公開年
                   Row(
                     children: [
-                      Text(
-                        widget.book.authorName,
-                        style: textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
+                      GestureDetector(
+                        onTap: () {
+                          // 著者詳細画面へ遷移
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AuthorDetailScreen(
+                                authorName: widget.book.authorName,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          widget.book.authorName,
+                          style: textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                       const SizedBox(width: AppDimensions.space8),

@@ -20,10 +20,11 @@ class _TimelineScreenState extends State<TimelineScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
     
-    // 初回データ読み込み
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<BookProvider>().syncDataIfNeeded();
-    });
+    // 初回データ読み込み（main.dartで既に実行されているのでスキップ可能）
+    // 必要に応じてコメントアウト解除
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   context.read<BookProvider>().initialize();
+    // });
   }
 
   @override
@@ -105,7 +106,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => bookProvider.syncData(),
+              onPressed: () => bookProvider.initialize(),
               child: const Text('再試行'),
             ),
           ],
@@ -132,7 +133,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => bookProvider.syncData(),
+              onPressed: () => bookProvider.initialize(),
               child: const Text('データを取得'),
             ),
           ],

@@ -35,10 +35,34 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
-            home: const MainNavigation(),
+            home: const _AppInitializer(),
           );
         },
       ),
     );
+  }
+}
+
+/// アプリ初期化ラッパー（データ読み込み）
+class _AppInitializer extends StatefulWidget {
+  const _AppInitializer();
+
+  @override
+  State<_AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends State<_AppInitializer> {
+  @override
+  void initState() {
+    super.initState();
+    // 初回データ読み込み（非同期で実行）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BookProvider>().initialize();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const MainNavigation();
   }
 }

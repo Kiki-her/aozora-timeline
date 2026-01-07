@@ -39,7 +39,7 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('青空文庫データを再度取得します'),
             onTap: () async {
               final messenger = ScaffoldMessenger.of(context);
-              await bookProvider.syncData();
+              await bookProvider.refreshFromRemote();
               messenger.showSnackBar(
                 const SnackBar(
                   content: Text('データを更新しました'),
