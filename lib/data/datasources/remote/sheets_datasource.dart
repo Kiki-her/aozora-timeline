@@ -55,10 +55,10 @@ class SheetsDatasource {
     // 0: 作品ID, 1: 作品名, 2: 作品名読み, 3: 作家名, 4: 作家名読み,
     // 5: 作家生年, 6: 作家没年, 7: 翻訳者名, 8: 翻訳者名読み,
     // 9: 翻訳者生年, 10: 翻訳者没年, 11: 分類, 12: 文字遣い種別,
-    // 13: 文字数, 14: 読了目安時間, 15: 書き出し, 16: 冒頭（XHTML）,
+    // 13: 文字数, 14: 読了目安時間, 15: 書き出し, 16: 冒頭（XHTML）← これを使用,
     // 17: 底本, 18: 出版社, 19: 初版発行日, 20: 入力者, 21: 校正者,
     // 22: 公開日, 23: 最終更新日, 24: 累計アクセス数, 25: カテゴリ,
-    // 26: 図書カードURL, 27: XHTML/HTMLファイルURL, 28: テキストファイルURL, 29: 青空 in Browsers URL
+    // 26: 図書カードURL, 27: XHTML/HTMLファイルURL, 28: テキストファイルURL, 29: 青空 in Browsers URL ← これを使用
     
     final workId = fields[0].trim();
     final title = fields[1].trim();
@@ -67,20 +67,21 @@ class SheetsDatasource {
     final authorReading = fields.length > 4 ? fields[4].trim() : '';
     final birthDate = fields.length > 5 ? fields[5].trim() : '';
     final deathDate = fields.length > 6 ? fields[6].trim() : '';
-    final excerpt = fields.length > 15 ? fields[15].trim() : '';
+    // 冒頭（XHTML）から取得（16列目 = インデックス16）
+    final excerptXhtml = fields.length > 16 ? fields[16].trim() : '';
     final category = fields.length > 25 ? fields[25].trim() : '';
-    final cardUrl = fields.length > 26 ? fields[26].trim() : '';
-    final htmlUrl = fields.length > 27 ? fields[27].trim() : '';
+    // 青空 in Browsers URLを使用（29列目 = インデックス29）
+    final browsersUrl = fields.length > 29 ? fields[29].trim() : '';
     
     // 必須フィールドチェック
     if (title.isEmpty || authorName.isEmpty) {
       return null;
     }
 
-    // URLの決定（優先順位: 図書カードURL > XHTML/HTML > デフォルト）
-    final url = cardUrl.isNotEmpty
-        ? cardUrl
-        : (htmlUrl.isNotEmpty ? htmlUrl : 'https://www.aozora.gr.jp/');
+    // URLの決定（青空 in Browsers URLを優先使用）
+    final url = browsersUrl.isNotEmpty
+        ? browsersUrl
+        : 'https://www.aozora.gr.jp/';
 
     // 出版年を推定（生年から適当な値を設定、なければ0）
     int publicationYear = 0;
@@ -99,7 +100,8 @@ class SheetsDatasource {
       title: title,
       authorName: authorName,
       authorId: _generateBookId('', authorName),
-      excerpt: excerpt.isNotEmpty ? excerpt : '「${title}」${authorName}著。青空文庫にて公開中。',
+      // 冒頭（XHTML）を使用、なければデフォルトテキスト
+      excerpt: excerptXhtml.isNotEmpty ? excerptXhtml : '「${title}」${authorName}著。青空文庫にて公開中。',
       url: url,
       publicationYear: publicationYear,
       authorBirthDate: birthDate.isNotEmpty ? birthDate : null,
