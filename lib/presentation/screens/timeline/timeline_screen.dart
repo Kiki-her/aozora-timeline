@@ -9,11 +9,22 @@ class TimelineScreen extends StatefulWidget {
   const TimelineScreen({super.key});
 
   @override
-  State<TimelineScreen> createState() => _TimelineScreenState();
+  State<TimelineScreen> createState() => TimelineScreenState();
 }
 
-class _TimelineScreenState extends State<TimelineScreen> {
+class TimelineScreenState extends State<TimelineScreen> {
   final _scrollController = ScrollController();
+
+  /// タイムラインを最上部にスクロール（X/Twitter風）
+  void scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
 
   @override
   void initState() {

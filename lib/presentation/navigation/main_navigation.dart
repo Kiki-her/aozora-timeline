@@ -15,13 +15,32 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
+  final GlobalKey<TimelineScreenState> _timelineKey = GlobalKey<TimelineScreenState>();
 
-  final List<Widget> _screens = const [
-    TimelineScreen(),
-    LikesScreen(),
-    ReadsScreen(),
-    SettingsScreen(),
-  ];
+  final List<Widget> _screens = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // スクリーンリストを初期化（TimelineScreenにKeyを渡す）
+    _screens.addAll([
+      TimelineScreen(key: _timelineKey),
+      const LikesScreen(),
+      const ReadsScreen(),
+      const SettingsScreen(),
+    ]);
+  }
+
+  void _onTabTapped(int index) {
+    if (index == 0 && _currentIndex == 0) {
+      // 既にホーム画面にいる場合、タイムラインを最上部にスクロール
+      _timelineKey.currentState?.scrollToTop();
+    } else {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +49,7 @@ class _MainNavigationState extends State<MainNavigation> {
         body: _screens[_currentIndex],
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
+          onTap: _onTabTapped,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined),
