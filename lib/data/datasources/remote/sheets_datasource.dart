@@ -78,6 +78,11 @@ class SheetsDatasource {
       return null;
     }
 
+    // 冒頭テキストが空の作品は除外
+    if (excerptXhtml.isEmpty) {
+      return null;
+    }
+
     // URLの決定（青空 in Browsers URLを優先使用）
     final url = browsersUrl.isNotEmpty
         ? browsersUrl
@@ -100,8 +105,8 @@ class SheetsDatasource {
       title: title,
       authorName: authorName,
       authorId: _generateBookId('', authorName),
-      // 冒頭（XHTML）を使用、なければデフォルトテキスト
-      excerpt: excerptXhtml.isNotEmpty ? excerptXhtml : '「${title}」${authorName}著。青空文庫にて公開中。',
+      // 冒頭（XHTML）を使用
+      excerpt: excerptXhtml,
       url: url,
       publicationYear: publicationYear,
       authorBirthDate: birthDate.isNotEmpty ? birthDate : null,
