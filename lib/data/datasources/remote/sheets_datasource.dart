@@ -1,24 +1,16 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
 import '../../models/book_model.dart';
 
 class SheetsDatasource {
-  static const String _sheetUrl =
-      'https://docs.google.com/spreadsheets/d/1-JtNfn7BIUTkw_XAEjXEno703w4qlB3fy0qR6u_JCPE/export?format=csv';
-
-  /// Googleスプレッドシートから青空文庫データを取得
+  /// ローカルアセットから青空文庫データを取得
   Future<List<BookModel>> fetchAozoraBooks() async {
     try {
-      final response = await http.get(Uri.parse(_sheetUrl));
-
-      if (response.statusCode == 200) {
-        final csvData = utf8.decode(response.bodyBytes);
-        return _parseCsvData(csvData);
-      } else {
-        throw Exception('Failed to fetch data: ${response.statusCode}');
-      }
+      // アセットからCSVを読み込み
+      final csvData = await rootBundle.loadString('assets/data/aozora_books.csv');
+      return _parseCsvData(csvData);
     } catch (e) {
-      throw Exception('Error fetching Aozora books: $e');
+      throw Exception('Error loading Aozora books from assets: $e');
     }
   }
 
@@ -27,24 +19,19 @@ class SheetsDatasource {
     final lines = csvData.split('\n');
     final books = <BookModel>[];
 
-    if (lines.isEmpty) return books;
-
-    // ヘッダー行を解析してカラムインデックスを取得
-    final headerFields = _parseCsvLine(lines[0]);
-    final columnIndices = _getColumnIndices(headerFields);
-
-    // データ行を処理（2行目以降）
+    // ヘッダー行をスキップ（1行目）
     for (var i = 1; i < lines.length; i++) {
       final line = lines[i].trim();
       if (line.isEmpty) continue;
 
       try {
-        final book = _parseBookLine(line, columnIndices);
+        final book = _parseBookLine(line);
         if (book != null) {
           books.add(book);
         }
       } catch (e) {
         // パースエラーは個別にスキップ（ログ記録のみ）
+        // Flutterの kDebugMode を使用する場合はこちら
         // if (kDebugMode) {
         //   print('Error parsing line $i: $e');
         // }
@@ -54,107 +41,69 @@ class SheetsDatasource {
     return books;
   }
 
-  /// ヘッダー行からカラムインデックスを取得
-  Map<String, int> _getColumnIndices(List<String> headers) {
-    final indices = <String, int>{};
-    
-    for (var i = 0; i < headers.length; i++) {
-      final header = headers[i].trim().toLowerCase();
-      
-      // 作品名カラムの検出
-      if (header.contains('作品名') || header.contains('title') || header.contains('タイトル')) {
-        indices['title'] = i;
-      }
-      // 著者名カラムの検出
-      else if (header.contains('著者') || header.contains('author') || header.contains('作者')) {
-        indices['author'] = i;
-      }
-      // 青空 in Browsers URLカラムの検出
-      else if (header.contains('青空') && header.contains('url')) {
-        indices['url'] = i;
-      }
-      // 書き出し・概要カラムの検出
-      else if (header.contains('書き出し') || header.contains('概要') || header.contains('excerpt')) {
-        indices['excerpt'] = i;
-      }
-    }
-    
-    return indices;
-  }
-
-  /// CSV行を1冊の書籍データにパース（新しいスプレッドシート形式対応）
-  BookModel? _parseBookLine(String line, Map<String, int> columnIndices) {
+  /// CSV行を1冊の書籍データにパース
+  BookModel? _parseBookLine(String line) {
     // CSVパース（カンマ区切り、ダブルクォート対応）
     final fields = _parseCsvLine(line);
 
-    if (fields.isEmpty) {
+    // 最低限のフィールド数チェック（30カラム想定）
+    if (fields.length < 10) {
       return null;
     }
 
-    // カラムインデックスに基づいてデータを取得
-    String title = '';
-    String authorName = '';
-    String url = '';
-    String excerpt = '';
-
-    // 作品名を取得
-    if (columnIndices.containsKey('title') && 
-        columnIndices['title']! < fields.length) {
-      title = fields[columnIndices['title']!].trim();
-    } else if (fields.isNotEmpty) {
-      // フォールバック: 最初のカラムを作品名とする
-      title = fields[0].trim();
-    }
-
-    // 著者名を取得
-    if (columnIndices.containsKey('author') && 
-        columnIndices['author']! < fields.length) {
-      authorName = fields[columnIndices['author']!].trim();
-    } else if (fields.length > 1) {
-      // フォールバック: 2番目のカラムを著者名とする
-      authorName = fields[1].trim();
-    }
-
-    // 青空 in Browsers URLを取得
-    if (columnIndices.containsKey('url') && 
-        columnIndices['url']! < fields.length) {
-      url = fields[columnIndices['url']!].trim();
-    } else {
-      // フォールバック: URLっぽいフィールドを探す
-      for (var i = 0; i < fields.length; i++) {
-        final field = fields[i].trim();
-        if (field.contains('http') && field.contains('aozora')) {
-          url = field;
-          break;
-        }
-      }
-    }
-
-    // 書き出し情報を取得（オプション）
-    if (columnIndices.containsKey('excerpt') && 
-        columnIndices['excerpt']! < fields.length) {
-      excerpt = fields[columnIndices['excerpt']!].trim();
-    }
-
-    // 必須情報の検証
+    // フィールドマッピング（新しいCSV構造）
+    // 0: 作品ID, 1: 作品名, 2: 作品名読み, 3: 作家名, 4: 作家名読み,
+    // 5: 作家生年, 6: 作家没年, 7: 翻訳者名, 8: 翻訳者名読み,
+    // 9: 翻訳者生年, 10: 翻訳者没年, 11: 分類, 12: 文字遣い種別,
+    // 13: 文字数, 14: 読了目安時間, 15: 書き出し, 16: 冒頭（XHTML）,
+    // 17: 底本, 18: 出版社, 19: 初版発行日, 20: 入力者, 21: 校正者,
+    // 22: 公開日, 23: 最終更新日, 24: 累計アクセス数, 25: カテゴリ,
+    // 26: 図書カードURL, 27: XHTML/HTMLファイルURL, 28: テキストファイルURL, 29: 青空 in Browsers URL
+    
+    final workId = fields[0].trim();
+    final title = fields[1].trim();
+    final titleReading = fields.length > 2 ? fields[2].trim() : '';
+    final authorName = fields.length > 3 ? fields[3].trim() : '';
+    final authorReading = fields.length > 4 ? fields[4].trim() : '';
+    final birthDate = fields.length > 5 ? fields[5].trim() : '';
+    final deathDate = fields.length > 6 ? fields[6].trim() : '';
+    final excerpt = fields.length > 15 ? fields[15].trim() : '';
+    final category = fields.length > 25 ? fields[25].trim() : '';
+    final cardUrl = fields.length > 26 ? fields[26].trim() : '';
+    final htmlUrl = fields.length > 27 ? fields[27].trim() : '';
+    
+    // 必須フィールドチェック
     if (title.isEmpty || authorName.isEmpty) {
       return null;
     }
 
-    // URLが見つからない場合はデフォルト
-    if (url.isEmpty) {
-      url = 'https://www.aozora.gr.jp/';
+    // URLの決定（優先順位: 図書カードURL > XHTML/HTML > デフォルト）
+    final url = cardUrl.isNotEmpty
+        ? cardUrl
+        : (htmlUrl.isNotEmpty ? htmlUrl : 'https://www.aozora.gr.jp/');
+
+    // 出版年を推定（生年から適当な値を設定、なければ0）
+    int publicationYear = 0;
+    if (birthDate.isNotEmpty) {
+      try {
+        final year = int.parse(birthDate.split('-')[0]);
+        publicationYear = year + 30; // 著者の30歳頃を仮の出版年とする
+      } catch (e) {
+        // パースエラーは無視
+      }
     }
 
     // BookModel生成
     return BookModel(
-      id: _generateBookId(title, authorName),
+      id: workId.isNotEmpty ? workId : _generateBookId(title, authorName),
       title: title,
       authorName: authorName,
-      authorId: _generateBookId('', authorName), // 著者IDを生成
-      excerpt: excerpt.isNotEmpty ? excerpt : '書き出し情報がありません。',
+      authorId: _generateBookId('', authorName),
+      excerpt: excerpt.isNotEmpty ? excerpt : '「${title}」${authorName}著。青空文庫にて公開中。',
       url: url,
-      publicationYear: 0, // スプレッドシートに年情報がない場合は0
+      publicationYear: publicationYear,
+      authorBirthDate: birthDate.isNotEmpty ? birthDate : null,
+      authorDeathDate: deathDate.isNotEmpty ? deathDate : null,
     );
   }
 
