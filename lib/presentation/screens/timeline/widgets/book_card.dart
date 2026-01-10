@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 import '../../../../domain/entities/book.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -167,7 +168,7 @@ class _BookCardState extends State<BookCard> {
   }
 }
 
-/// インタラクションバー (いいね・読了・続きを読む)
+/// インタラクションバー (いいね・読了・共有・続きを読む)
 class _InteractionBar extends StatelessWidget {
   final Book book;
 
@@ -183,21 +184,23 @@ class _InteractionBar extends StatelessWidget {
         // いいねボタン
         _ActionButton(
           icon: book.isLiked ? Icons.favorite : Icons.favorite_border,
-          label: book.likeCount.toString(),
           color: book.isLiked ? AppColors.likeRed : null,
           onTap: () => interactionProvider.toggleLike(book),
         ),
         // 読了ボタン
         _ActionButton(
           icon: book.isRead ? Icons.check_circle : Icons.check_circle_outline,
-          label: book.readCount.toString(),
           color: book.isRead ? AppColors.retweetGreen : null,
           onTap: () => interactionProvider.toggleRead(book),
+        ),
+        // 共有ボタン
+        _ActionButton(
+          icon: Icons.share_outlined,
+          onTap: () => _showShareDialog(context, book),
         ),
         // 続きを読むボタン
         _ActionButton(
           icon: Icons.link,
-          label: '続きを読む',
           onTap: () => _launchUrl(book.url),
         ),
       ],
@@ -210,18 +213,26 @@ class _InteractionBar extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
+
+  void _showShareDialog(BuildContext context, Book book) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => _ShareBottomSheet(book: book),
+    );
+  }
 }
 
 /// アクションボタン
 class _ActionButton extends StatelessWidget {
   final IconData icon;
-  final String label;
   final Color? color;
   final VoidCallback onTap;
 
   const _ActionButton({
     required this.icon,
-    required this.label,
     this.color,
     required this.onTap,
   });
@@ -237,23 +248,134 @@ class _ActionButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppDimensions.radiusSmall),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.space8,
-          vertical: AppDimensions.space4,
+          horizontal: AppDimensions.space12,
+          vertical: AppDimensions.space8,
         ),
+        child: Icon(
+          icon,
+          size: AppDimensions.iconMedium,
+          color: color ?? defaultColor,
+        ),
+      ),
+    );
+  }
+}
+
+/// 共有ボトムシート
+class _ShareBottomSheet extends StatelessWidget {
+  final Book book;
+
+  const _ShareBottomSheet({required this.book});
+
+  @override
+  Widget build(BuildContext context) {
+    final shareText = '「${book.title}」${book.authorName}著\n${book.excerpt.substring(0, book.excerpt.length > 100 ? 100 : book.excerpt.length)}...\n\n${book.url}';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.space16,
+        vertical: AppDimensions.space24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '共有',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: AppDimensions.space16),
+          // X (Twitter)
+          _ShareOption(
+            icon: Icons.close,
+            label: 'X (Twitter)で共有',
+            onTap: () {
+              final encodedText = Uri.encodeComponent(shareText);
+              final url = 'https://twitter.com/intent/tweet?text=$encodedText';
+              _launchUrl(url);
+              Navigator.pop(context);
+            },
+          ),
+          const Divider(),
+          // Facebook
+          _ShareOption(
+            icon: Icons.facebook,
+            label: 'Facebookで共有',
+            onTap: () {
+              final encodedUrl = Uri.encodeComponent(book.url);
+              final url = 'https://www.facebook.com/sharer/sharer.php?u=$encodedUrl';
+              _launchUrl(url);
+              Navigator.pop(context);
+            },
+          ),
+          const Divider(),
+          // LINE
+          _ShareOption(
+            icon: Icons.chat_bubble_outline,
+            label: 'LINEで共有',
+            onTap: () {
+              final encodedText = Uri.encodeComponent(shareText);
+              final url = 'https://line.me/R/share?text=$encodedText';
+              _launchUrl(url);
+              Navigator.pop(context);
+            },
+          ),
+          const Divider(),
+          // リンクをコピー
+          _ShareOption(
+            icon: Icons.content_copy,
+            label: 'リンクをコピー',
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: shareText));
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('クリップボードにコピーしました'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+}
+
+/// 共有オプション
+class _ShareOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ShareOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppDimensions.space12),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: AppDimensions.iconMedium,
-              color: color ?? defaultColor,
-            ),
-            const SizedBox(width: AppDimensions.space4),
+            Icon(icon, size: 24),
+            const SizedBox(width: AppDimensions.space16),
             Text(
               label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color ?? defaultColor,
-                  ),
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
           ],
         ),
