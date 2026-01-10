@@ -1,13 +1,37 @@
 {
-    "name": "book_feed",
-    "short_name": "book_feed",
+    "name": "青空文庫タイムライン",
+    "short_name": "青空文庫",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#000000",
+    "theme_color": "#1D9BF0",
+    "description": "X (Twitter) UIをベースにした青空文庫作品発見アプリ。13,569作品の冒頭文から気になる作品を見つけよう。",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "categories": ["books", "education", "entertainment"],
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "ホーム",
+            "short_name": "ホーム",
+            "description": "タイムラインを開く",
+            "url": ".",
+            "icons": [{
+                "src": "icons/Icon-192.png",
+                "sizes": "192x192"
+            }]
+        },
+        {
+            "name": "いいね",
+            "short_name": "いいね",
+            "description": "いいねした作品",
+            "url": ".?tab=likes",
+            "icons": [{
+                "src": "icons/Icon-192.png",
+                "sizes": "192x192"
+            }]
+        }
+    ],
     "icons": [
         {
             "src": "icons/Icon-192.png",
