@@ -341,6 +341,5 @@ Issue報告・機能リクエスト: [GitHub Issues](https://github.com/Kiki-her
 
 ---
 
-**Made with ❤️ for 文学愛好者**
 
 **Powered by 青空文庫 & Flutter**
