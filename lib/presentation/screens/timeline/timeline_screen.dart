@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../providers/book_provider.dart';
+import '../settings/settings_screen.dart';
 import 'widgets/book_card.dart';
 
 /// タイムライン画面 (ホーム)
@@ -71,7 +72,12 @@ class TimelineScreenState extends State<TimelineScreen> {
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
-              // 設定画面へ遷移 (後で実装)
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
             },
           ),
         ],
