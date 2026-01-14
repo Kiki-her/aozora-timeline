@@ -91,6 +91,25 @@ class HiveService {
     return authors;
   }
 
+  /// 著者情報を取得（著者名から最初の本を取得して著者情報を抽出）
+  Future<Map<String, dynamic>?> getAuthorInfo(String authorName) async {
+    final box = booksBox;
+    final authorBooks = box.values.where((book) => book.authorName == authorName).toList();
+    
+    if (authorBooks.isEmpty) return null;
+    
+    // 最初の本から著者情報を取得
+    final firstBook = authorBooks.first;
+    
+    return {
+      'name': authorName,
+      'id': firstBook.authorId,
+      'birthDate': firstBook.authorBirthDate,
+      'deathDate': firstBook.authorDeathDate,
+      'bookCount': authorBooks.length,
+    };
+  }
+
   /// 書籍データをクリア
   Future<void> clearBooks() async {
     final box = booksBox;

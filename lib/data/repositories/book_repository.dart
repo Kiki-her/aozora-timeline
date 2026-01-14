@@ -1,4 +1,5 @@
 import '../../domain/entities/book.dart';
+import '../../domain/entities/author.dart';
 import '../datasources/local/hive_service.dart';
 import '../datasources/remote/sheets_datasource.dart';
 
@@ -52,6 +53,20 @@ class BookRepository {
   /// 全著者リストを取得
   Future<List<String>> getAllAuthors() async {
     return await _hiveService.getAllAuthors();
+  }
+
+  /// 著者情報を取得
+  Future<Author?> getAuthorInfo(String authorName) async {
+    final authorInfo = await _hiveService.getAuthorInfo(authorName);
+    if (authorInfo == null) return null;
+    
+    return Author(
+      id: authorInfo['id'] as String,
+      name: authorInfo['name'] as String,
+      birthDate: authorInfo['birthDate'] as String?,
+      deathDate: authorInfo['deathDate'] as String?,
+      bookCount: authorInfo['bookCount'] as int,
+    );
   }
 
   /// データ更新（手動リフレッシュ）
