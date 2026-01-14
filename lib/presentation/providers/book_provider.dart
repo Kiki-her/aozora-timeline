@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show ChangeNotifier, kDebugMode;
 import '../../domain/entities/book.dart';
+import '../../domain/entities/author.dart';
 import '../../data/repositories/book_repository.dart';
 import '../../data/datasources/local/hive_service.dart';
 import '../../data/datasources/remote/sheets_datasource.dart';
@@ -126,6 +127,18 @@ class BookProvider with ChangeNotifier {
         print('著者リスト取得失敗: $e');
       }
       return [];
+    }
+  }
+
+  /// 著者情報を取得
+  Future<Author?> getAuthorInfo(String authorName) async {
+    try {
+      return await _repository.getAuthorInfo(authorName);
+    } catch (e) {
+      if (kDebugMode) {
+        print('著者情報取得失敗: $e');
+      }
+      return null;
     }
   }
 

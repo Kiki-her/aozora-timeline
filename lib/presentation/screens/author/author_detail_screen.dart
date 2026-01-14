@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/book.dart';
+import '../../../domain/entities/author.dart';
 import '../../providers/book_provider.dart';
 import '../timeline/widgets/book_card.dart';
 
@@ -19,22 +20,29 @@ class AuthorDetailScreen extends StatefulWidget {
 
 class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
   List<Book> _authorBooks = [];
+  Author? _authorInfo;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadAuthorBooks();
+    _loadAuthorData();
   }
 
-  Future<void> _loadAuthorBooks() async {
+  Future<void> _loadAuthorData() async {
     setState(() => _isLoading = true);
 
     final bookProvider = context.read<BookProvider>();
-    final books = await bookProvider.getBooksByAuthor(widget.authorName);
+    
+    // 著者情報と作品リストを並行して取得
+    final results = await Future.wait([
+      bookProvider.getAuthorInfo(widget.authorName),
+      bookProvider.getBooksByAuthor(widget.authorName),
+    ]);
 
     setState(() {
-      _authorBooks = books;
+      _authorInfo = results[0] as Author?;
+      _authorBooks = results[1] as List<Book>;
       _isLoading = false;
     });
   }
@@ -78,7 +86,7 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
         // 著者プロフィールヘッダー
         SliverToBoxAdapter(
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: isDark ? AppColors.surfaceGray : AppColors.backgroundWhite,
               border: Border(
@@ -91,50 +99,122 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 著者名
-                Text(
-                  widget.authorName,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // 作品数
-                Text(
-                  '${_authorBooks.length}作品',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                // 著者アバター
+                Center(
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.borderGrayDark : AppColors.hoverGray,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        widget.authorName[0],
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
 
-                // 青空文庫リンク
-                InkWell(
-                  onTap: () {
-                    // 著者検索URLを開く（将来的にWebView統合）
-                    // https://www.aozora.gr.jp/index_pages/person_search.html
-                  },
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.open_in_new,
-                        size: 18,
-                        color: AppColors.primaryBlue,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '青空文庫で著者を見る',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.primaryBlue,
-                          decoration: TextDecoration.underline,
+                // 著者名
+                Center(
+                  child: Text(
+                    widget.authorName,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // 生没年
+                if (_authorInfo != null)
+                  Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 16,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                         ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _authorInfo!.lifeSpan,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 12),
+
+                // 作品数
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.borderGrayDark : AppColors.hoverGray,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${_authorBooks.length}作品',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                       ),
-                    ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // 青空文庫リンク
+                Center(
+                  child: InkWell(
+                    onTap: () {
+                      // 著者検索URLを開く（将来的にWebView統合）
+                      // https://www.aozora.gr.jp/index_pages/person_search.html
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppColors.primaryBlue,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.open_in_new,
+                            size: 18,
+                            color: AppColors.primaryBlue,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '青空文庫で著者を見る',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryBlue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -144,15 +224,26 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
 
         // 作品一覧セクション
         SliverToBoxAdapter(
-          child: Padding(
+          child: Container(
             padding: const EdgeInsets.all(16),
-            child: Text(
-              '作品一覧',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-              ),
+            color: isDark ? AppColors.backgroundBlack : AppColors.backgroundWhite,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.book_outlined,
+                  size: 20,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '作品一覧',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -163,12 +254,22 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text(
-                      '作品が見つかりませんでした',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                      ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 48,
+                          color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiary,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '作品が見つかりませんでした',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
