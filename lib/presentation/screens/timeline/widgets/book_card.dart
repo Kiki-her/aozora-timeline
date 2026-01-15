@@ -149,7 +149,7 @@ class _BookCardState extends State<BookCard> {
                       ),
                     ),
                   const SizedBox(height: AppDimensions.space8),
-                  // 書籍タイトル
+                  // 書籍タイトル（青空 in Browsers URLへリンク）
                   InkWell(
                     onTap: () => _launchUrl(widget.book.url),
                     child: Text(
@@ -172,6 +172,8 @@ class _BookCardState extends State<BookCard> {
     );
   }
 
+  /// 青空文庫のURLを外部ブラウザで開く
+  /// book.urlには青空 in Browsers URL (https://aozora.binb.jp/reader/main.html?cid=作品ID) が格納されている
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -210,7 +212,7 @@ class _InteractionBar extends StatelessWidget {
           icon: Icons.share_outlined,
           onTap: () => _showShareDialog(context, book),
         ),
-        // 続きを読むボタン
+        // 続きを読むボタン（青空 in Browsers URLへリンク）
         _ActionButton(
           icon: Icons.link,
           onTap: () => _launchUrl(book.url),

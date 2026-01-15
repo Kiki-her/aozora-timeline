@@ -84,6 +84,8 @@ class SheetsDatasource {
     }
 
     // URLの決定（青空 in Browsers URLを優先使用）
+    // 青空 in Browsers URL: https://aozora.binb.jp/reader/main.html?cid=作品ID
+    // これはブラウザ内で直接読める形式のURL
     final url = browsersUrl.isNotEmpty
         ? browsersUrl
         : 'https://www.aozora.gr.jp/';
