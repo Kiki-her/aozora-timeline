@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/responsive_wrapper.dart';
 import '../../../domain/entities/book.dart';
 import '../../../domain/entities/author.dart';
 import '../../providers/book_provider.dart';
@@ -51,30 +52,32 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundBlack : AppColors.backgroundWhite,
-      appBar: AppBar(
-        backgroundColor: isDark ? AppColors.surfaceGray : AppColors.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+    return ResponsiveWrapper(
+      child: Scaffold(
+        backgroundColor: isDark ? AppColors.backgroundBlack : AppColors.backgroundWhite,
+        appBar: AppBar(
+          backgroundColor: isDark ? AppColors.surfaceGray : AppColors.backgroundWhite,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back,
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+            ),
+            onPressed: () => Navigator.pop(context),
           ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          widget.authorName,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+          title: Text(
+            widget.authorName,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+            ),
           ),
         ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _buildContent(context),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _buildContent(context),
     );
   }
 
@@ -173,46 +176,6 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // 青空文庫リンク
-                Center(
-                  child: InkWell(
-                    onTap: () {
-                      // 著者検索URLを開く（将来的にWebView統合）
-                      // https://www.aozora.gr.jp/index_pages/person_search.html
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: AppColors.primaryBlue,
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.open_in_new,
-                            size: 18,
-                            color: AppColors.primaryBlue,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '青空文庫で著者を見る',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primaryBlue,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),

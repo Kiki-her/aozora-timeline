@@ -49,19 +49,31 @@ class _BookCardState extends State<BookCard> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 著者アイコン
-            Container(
-              width: AppDimensions.avatarMedium,
-              height: AppDimensions.avatarMedium,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.surfaceGray : AppColors.hoverGray,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  widget.book.authorName[0],
-                  style: textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+            // 著者アイコン（タップで著者詳細画面へ遷移）
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AuthorDetailScreen(
+                      authorName: widget.book.authorName,
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: AppDimensions.avatarMedium,
+                height: AppDimensions.avatarMedium,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.surfaceGray : AppColors.hoverGray,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    widget.book.authorName[0],
+                    style: textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
