@@ -64,9 +64,11 @@ class TimelineScreenState extends State<TimelineScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'ホーム',
-          style: Theme.of(context).textTheme.headlineMedium,
+        title: Image.asset(
+          'assets/images/home_icon.png',
+          height: 32,
+          fit: BoxFit.contain,
+          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
         ),
         actions: [
           IconButton(
